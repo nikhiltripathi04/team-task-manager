@@ -5,6 +5,7 @@ import {
   addMemberToProject,
   removeMemberFromProject,
   getProjectById,
+  getUserProjects,
 } from "./project.service";
 
 export const createProjectController = async (
@@ -128,6 +129,32 @@ export const getProjectController = async (
   } catch (error: any) {
     const status = error.message === "Project not found" ? 404 : 403;
     return res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getUserProjectsController = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const projects = await getUserProjects(req.user.id);
+
+    return res.json({
+      success: true,
+      data: projects,
+    });
+  } catch (error: any) {
+    return res.status(400).json({
       success: false,
       message: error.message,
     });

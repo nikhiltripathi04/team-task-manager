@@ -17,6 +17,15 @@ export const createProject = async (
   return project;
 };
 
+export const getUserProjects = async (userId: string) => {
+  return await Project.find({
+    $or: [{ createdBy: userId }, { members: userId }],
+  })
+    .select("name description members createdBy createdAt")
+    .populate("createdBy", "name email")
+    .populate("members", "name email");
+};
+
 export const addMemberToProject = async (
   projectId: string,
   userId: string,
