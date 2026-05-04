@@ -6,38 +6,31 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret";
 export interface AuthRequest extends Request {
   user?: {
     id: string;
-    role: string;
+    role: "admin" | "member";
   };
 }
 
-export const protect = (
+export const authenticate = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    let token: string | undefined;
+    const authHeader = req.headers.authorization;
 
-    // Check Authorization header
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
-
-    // If no token
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Not authorized, no token",
+        message: "Unauthorized - No token provided",
       });
     }
+
+    const token = authHeader.split(" ")[1];
 
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET) as {
       id: string;
-      role: string;
+      role: "admin" | "member";
     };
 
     // Attach user to request
@@ -47,27 +40,34 @@ export const protect = (
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: "Not authorized, invalid token",
+      message: "Unauthorized - Invalid token",
     });
   }
 };
 
-export const authorize = (...roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      return res.status(401).json({
+export const authorize =
+  (...allowedRoles: ("admin" | "member")[]) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden - You do not have permission",
+        });
+      }
+
+      next();
+    } catch (error) {
+      return res.status(500).json({
         success: false,
-        message: "Not authorized",
+        message: "Authorization error",
       });
     }
-
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: Access denied",
-      });
-    }
-
-    next();
   };
-};

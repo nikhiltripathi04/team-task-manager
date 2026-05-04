@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { register, login } from "./auth.controller";
 
-import { protect } from "../../middleware/auth.middleware";
+import { authenticate } from "../../middleware/auth.middleware";
 import { authorize } from "../../middleware/auth.middleware";
 
 const router = Router();
@@ -10,7 +10,7 @@ const router = Router();
 router.post("/register", register);
 router.post("/login", login);
 
-router.get("/me", protect, (req: any, res) => {
+router.get("/me", authenticate, (req: any, res) => {
   res.status(200).json({
     success: true,
     message: "Access granted",
@@ -18,10 +18,25 @@ router.get("/me", protect, (req: any, res) => {
   });
 });
 
-router.get("/admin", protect, authorize("admin"), (req: any, res) => {
+router.get("/protected", authenticate, (req: any, res) => {
+  res.json({
+    success: true,
+    message: "You accessed a protected route",
+    user: req.user,
+  });
+});
+
+router.get("/admin", authenticate, authorize("admin"), (req: any, res) => {
   res.status(200).json({
     success: true,
     message: "Welcome Admin",
+  });
+});
+
+router.get("/admin-only", authenticate, authorize("admin"), (req: any, res) => {
+  res.json({
+    success: true,
+    message: "Welcome Admin 🚀",
   });
 });
 

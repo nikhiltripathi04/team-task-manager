@@ -1,12 +1,12 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "./user.model";
+import { User } from "./user.model";
 import { RegisterDTO, LoginDTO } from "./auth.dto";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
 export const registerUser = async (data: RegisterDTO) => {
-  const { name, email, password } = data;
+  const { name, email, password, role } = data;
 
   // Check if user already exists
   const existingUser = await User.findOne({ email });
@@ -22,6 +22,7 @@ export const registerUser = async (data: RegisterDTO) => {
     name,
     email,
     password: hashedPassword,
+    role: role || "member", // 👈 THIS IS THE KEY CHANGE
   });
 
   const { password: _, ...userObj } = user.toObject();
