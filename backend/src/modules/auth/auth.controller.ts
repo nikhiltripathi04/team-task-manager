@@ -11,7 +11,8 @@ export const register = async (req: Request, res: Response) => {
       data: user,
     });
   } catch (error: any) {
-    res.status(400).json({
+    const status = error.message === "Invalid credentials" ? 401 : 400;
+    res.status(status).json({
       success: false,
       message: error.message,
     });
@@ -46,7 +47,8 @@ export const login = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(400).json({
+    const status = error.message === "Invalid credentials" ? 401 : 400;
+    res.status(status).json({
       success: false,
       message: error.message,
     });
