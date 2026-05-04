@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
+
 import { errorHandler } from "./middleware/error.middleware";
+import { sendResponse } from "./utils/apiResponse";
+import { logger } from "./utils/logger";
 
 const app = express();
 
@@ -10,7 +13,8 @@ app.use(express.json());
 
 // Health check route
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  logger("Health check route hit");
+  return sendResponse(res, 200, true, "API is running");
 });
 
 app.use(errorHandler);
