@@ -18,6 +18,24 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
+export const searchUser = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.query;
+    const user = await authService.searchUserByEmail(email as string);
+
+    res.status(200).json({
+      success: true,
+      message: "User found",
+      data: user,
+    });
+  } catch (error: any) {
+    res.status(404).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const login = async (req: Request, res: Response) => {
   try {
     const result = await authService.loginUser(req.body);

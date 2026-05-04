@@ -171,3 +171,26 @@ export const getTaskStatsController = asyncHandler(async (
     stats
   );
 });
+
+export const deleteTaskController = asyncHandler(async (
+  req: AuthRequest,
+  res: Response
+) => {
+  const { taskId } = req.params;
+
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+  }
+
+  const result = await taskService.deleteTask(taskId as string, req.user.id);
+
+  return sendResponse(
+    res,
+    200,
+    result.message,
+    null
+  );
+});

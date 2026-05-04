@@ -5,7 +5,8 @@ import {
   updateTaskStatusController,
   assignTaskController,
   getMyTasksController,
-  getTaskStatsController
+  getTaskStatsController,
+  deleteTaskController
 } from "./task.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 import { validate } from "../../utils/validate";
@@ -33,5 +34,8 @@ router.patch("/:taskId/status", authenticate, updateTaskStatusController);
 
 // Assign Task
 router.patch("/:taskId/assign", authenticate, assignTaskController);
+
+// Delete Task
+router.delete("/:taskId", authenticate, deleteTaskController);
 
 export default router;

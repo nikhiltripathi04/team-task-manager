@@ -26,7 +26,21 @@ export const registerUser = async (data: RegisterDTO) => {
   });
 
   const { password: _, ...userObj } = user.toObject();
-  return userObj;
+
+  // Generate token so they are logged in automatically
+  const token = jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+    },
+    JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  return {
+    user: userObj,
+    token,
+  };
 };
 
 export const loginUser = async (data: LoginDTO) => {
@@ -60,4 +74,12 @@ export const loginUser = async (data: LoginDTO) => {
     user: userObj,
     token,
   };
+};
+
+export const searchUserByEmail = async (email: string) => {
+  const user = await User.findOne({ email }).select("name email _id");
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
 };

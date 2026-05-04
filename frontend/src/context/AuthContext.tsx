@@ -14,18 +14,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Basic persistence check on mount
+    // Safety net for session restoration
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsed = JSON.parse(savedUser);
+        // Normalize _id to id if missing, but keep both for compatibility
+        if (parsed._id && !parsed.id) parsed.id = parsed._id;
+        setUser(parsed);
+      } catch (err) {
+        console.error("Session corruption detected, clearing storage.");
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
     }
     setLoading(false);
   }, []);
 
   const login = (data: { user: any; token: string }) => {
+    // Normalize user object for frontend consistency
+    const userData = { ...data.user, id: data.user._id };
     localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    setUser(data.user);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
   };
 
   const logout = () => {

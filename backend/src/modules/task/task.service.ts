@@ -38,33 +38,58 @@ export const createTask = async (
     throw new Error("Not authorized to create tasks in this project");
   }
 
-  // 3. Check assigned user is part of project
+  // 3. RBAC: Only creator can assign to others
+  let targetAssignee = assignedTo;
+  if (!isCreator) {
+    targetAssignee = currentUserId; // 👈 Forced self-assignment for members
+  }
+
+  // 4. Check assigned user is part of project
   const isAssignedUserMember =
     project.members.some(
-      (member) => member.toString() === assignedTo.toString()
+      (member) => member.toString() === targetAssignee.toString()
     ) ||
-    project.createdBy.toString() === assignedTo.toString();
+    project.createdBy.toString() === targetAssignee.toString();
 
   if (!isAssignedUserMember) {
     throw new Error("Assigned user is not part of the project");
   }
 
-  // 4. Create task
+  // 5. Create task
   const task = await Task.create({
     title,
     description,
     project: new Types.ObjectId(projectId),
-    assignedTo: new Types.ObjectId(assignedTo),
+    assignedTo: new Types.ObjectId(targetAssignee),
     createdBy: new Types.ObjectId(currentUserId),
     dueDate,
   });
 
-  // 5. Rich population for UI readiness
+  // 6. Rich population for UI readiness
   return await task.populate([
     { path: "assignedTo", select: "name email" },
     { path: "createdBy", select: "name email" },
     { path: "project", select: "name" },
   ]);
+};
+
+export const deleteTask = async (taskId: string, currentUserId: string) => {
+  const task = await Task.findById(taskId);
+  if (!task) throw new Error("Task not found");
+
+  const project = await Project.findById(task.project);
+  if (!project) throw new Error("Project not found");
+
+  // RBAC: Only task creator OR project creator can delete
+  const isTaskCreator = task.createdBy.toString() === currentUserId.toString();
+  const isProjectCreator = project.createdBy.toString() === currentUserId.toString();
+
+  if (!isTaskCreator && !isProjectCreator) {
+    throw new Error("Not authorized to delete this task");
+  }
+
+  await Task.findByIdAndDelete(taskId);
+  return { message: "Task deleted successfully" };
 };
 
 export const getTasksByProject = async (

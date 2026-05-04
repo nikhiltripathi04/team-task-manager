@@ -112,12 +112,20 @@ const Projects = () => {
 
                 <div className="mt-auto flex items-center justify-between pt-6 border-t border-slate-50">
                    <div className="flex -space-x-2">
-                      {[1,2,3].map(i => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white" />
+                      {p.members?.slice(0, 4).map((m: any) => (
+                        <div 
+                          key={m._id} 
+                          title={m.name}
+                          className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[8px] font-black text-slate-500 shadow-sm"
+                        >
+                          {m.name?.[0]}
+                        </div>
                       ))}
-                      <div className="w-6 h-6 rounded-full bg-indigo-50 border-2 border-white flex items-center justify-center text-[8px] font-bold text-indigo-500">
-                        +
-                      </div>
+                      {p.members?.length > 4 && (
+                        <div className="w-7 h-7 rounded-full bg-indigo-50 border-2 border-white flex items-center justify-center text-[8px] font-bold text-indigo-500">
+                          +{p.members.length - 4}
+                        </div>
+                      )}
                    </div>
                    <div className="text-indigo-600 font-black text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
                       Open Board →
