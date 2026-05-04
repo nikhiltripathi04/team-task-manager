@@ -6,6 +6,7 @@ import { sendResponse } from "./utils/apiResponse";
 import { logger } from "./utils/logger";
 
 import authRoutes from "./modules/auth/auth.routes";
+import projectRoutes from "./modules/project/project.routes";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
 
 // Health check route
 app.get("/", (req, res) => {
