@@ -5,11 +5,15 @@ import { errorHandler } from "./middleware/error.middleware";
 import { sendResponse } from "./utils/apiResponse";
 import { logger } from "./utils/logger";
 
+import authRoutes from "./modules/auth/auth.routes";
+
 const app = express();
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/auth", authRoutes);
 
 // Health check route
 app.get("/", (req, res) => {
