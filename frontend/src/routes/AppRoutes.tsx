@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import Dashboard from "../pages/Dashboard";
 import Projects from "../pages/Projects";
 import ProjectDetails from "../pages/ProjectDetails";
+import MyTasks from "../pages/MyTasks";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 
@@ -38,6 +39,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Projects />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/my-tasks" 
+          element={
+            <ProtectedRoute>
+              <MyTasks />
             </ProtectedRoute>
           } 
         />
