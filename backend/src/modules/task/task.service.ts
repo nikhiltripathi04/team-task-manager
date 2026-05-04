@@ -1,5 +1,6 @@
 import { Task } from "./task.model";
 import { Project } from "../project/project.model";
+import { User } from "../auth/user.model";
 import { Types } from "mongoose";
 
 export const createTask = async (
@@ -216,28 +217,61 @@ export const assignTask = async (
 };
 
 export const getMyTasks = async (currentUserId: string) => {
-  return await Task.find({
-    assignedTo: currentUserId,
-  })
+  const user = await User.findById(currentUserId);
+  
+  let query: any = { assignedTo: currentUserId };
+
+  if (user?.role === "admin") {
+    const ownedProjects = await Project.find({ createdBy: currentUserId }).select("_id");
+    const projectIds = ownedProjects.map(p => p._id);
+    
+    query = {
+      $or: [
+        { project: { $in: projectIds } },
+        { assignedTo: currentUserId }
+      ]
+    };
+  }
+
+  return await Task.find(query)
     .populate("project", "name description")
+    .populate("assignedTo", "name email") // 👈 Added for Admin visibility
     .populate("createdBy", "name email")
     .sort({ dueDate: 1, createdAt: -1 }); // Priority by due date
 };
 
 export const getTaskStats = async (userId: string) => {
   const userObjectId = new Types.ObjectId(userId);
+  const currentUser = await User.findById(userId);
   const now = new Date();
+
+  // If Admin, match all tasks in projects they created
+  // If Member, match only tasks assigned to them
+  const matchStage = currentUser?.role === "admin" 
+    ? { $or: [{ createdBy: userObjectId }, { assignedTo: userObjectId }] }
+    : { assignedTo: userObjectId };
+
+  // Actually, for Admin to see "Team" stats, we should find projects they own first
+  let finalMatch: any = { assignedTo: userObjectId };
+
+  if (currentUser?.role === "admin") {
+    const ownedProjects = await Project.find({ createdBy: userObjectId }).select("_id");
+    const projectIds = ownedProjects.map(p => p._id);
+    finalMatch = { 
+      $or: [
+        { project: { $in: projectIds } },
+        { assignedTo: userObjectId }
+      ] 
+    };
+  }
 
   const stats = await Task.aggregate([
     {
-      $match: {
-        assignedTo: userObjectId,
-      },
+      $match: finalMatch,
     },
     {
       $facet: {
         total: [{ $count: "count" }],
-
         statusBreakdown: [
           {
             $group: {
@@ -246,7 +280,6 @@ export const getTaskStats = async (userId: string) => {
             },
           },
         ],
-
         overdue: [
           {
             $match: {
@@ -262,8 +295,7 @@ export const getTaskStats = async (userId: string) => {
 
   const result = stats[0];
 
-  // Helper to extract count safely
-  const getCount = (arr: any[]) => (arr.length > 0 ? arr[0].count : 0);
+  const getCount = (arr: any[]) => (arr && arr.length > 0 ? arr[0].count : 0);
 
   const statusMap: any = {
     todo: 0,
@@ -271,9 +303,11 @@ export const getTaskStats = async (userId: string) => {
     done: 0,
   };
 
-  result.statusBreakdown.forEach((item: any) => {
-    statusMap[item._id] = item.count;
-  });
+  if (result.statusBreakdown) {
+    result.statusBreakdown.forEach((item: any) => {
+      statusMap[item._id] = item.count;
+    });
+  }
 
   return {
     total: getCount(result.total),
