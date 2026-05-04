@@ -198,3 +198,63 @@ export const getMyTasks = async (currentUserId: string) => {
     .populate("createdBy", "name email")
     .sort({ dueDate: 1, createdAt: -1 }); // Priority by due date
 };
+
+export const getTaskStats = async (userId: string) => {
+  const userObjectId = new Types.ObjectId(userId);
+  const now = new Date();
+
+  const stats = await Task.aggregate([
+    {
+      $match: {
+        assignedTo: userObjectId,
+      },
+    },
+    {
+      $facet: {
+        total: [{ $count: "count" }],
+
+        statusBreakdown: [
+          {
+            $group: {
+              _id: "$status",
+              count: { $sum: 1 },
+            },
+          },
+        ],
+
+        overdue: [
+          {
+            $match: {
+              dueDate: { $lt: now },
+              status: { $ne: "done" },
+            },
+          },
+          { $count: "count" },
+        ],
+      },
+    },
+  ]);
+
+  const result = stats[0];
+
+  // Helper to extract count safely
+  const getCount = (arr: any[]) => (arr.length > 0 ? arr[0].count : 0);
+
+  const statusMap: any = {
+    todo: 0,
+    "in-progress": 0,
+    done: 0,
+  };
+
+  result.statusBreakdown.forEach((item: any) => {
+    statusMap[item._id] = item.count;
+  });
+
+  return {
+    total: getCount(result.total),
+    todo: statusMap.todo,
+    inProgress: statusMap["in-progress"],
+    done: statusMap.done,
+    overdue: getCount(result.overdue),
+  };
+};

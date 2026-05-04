@@ -4,14 +4,16 @@ import {
   getTasksByProjectController,
   updateTaskStatusController,
   assignTaskController,
-  getMyTasksController
+  getMyTasksController,
+  getTaskStatsController
 } from "./task.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 
 const router = express.Router();
 
-// Get My Tasks (Must be above /:taskId routes to avoid conflict)
+// Static Routes (Must be above /:taskId routes)
 router.get("/my-tasks", authenticate, getMyTasksController);
+router.get("/stats", authenticate, getTaskStatsController);
 
 // Create Task
 router.post("/", authenticate, createTaskController);

@@ -148,3 +148,30 @@ export const getMyTasksController = async (
     });
   }
 };
+
+export const getTaskStatsController = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const stats = await taskService.getTaskStats(req.user.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Task statistics fetched successfully",
+      data: stats,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch task statistics",
+    });
+  }
+};
