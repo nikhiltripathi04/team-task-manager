@@ -7,6 +7,7 @@ import { logger } from "./utils/logger";
 
 import authRoutes from "./modules/auth/auth.routes";
 import projectRoutes from "./modules/project/project.routes";
+import taskRoutes from "./modules/task/task.routes";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/tasks", taskRoutes);
 
 // Health check route
 app.get("/", (req, res) => {
