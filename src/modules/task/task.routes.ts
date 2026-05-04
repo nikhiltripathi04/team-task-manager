@@ -8,6 +8,8 @@ import {
   getTaskStatsController
 } from "./task.controller";
 import { authenticate } from "../../middleware/auth.middleware";
+import { validate } from "../../utils/validate";
+import { createTaskSchema } from "./task.dto";
 
 const router = express.Router();
 
@@ -16,7 +18,12 @@ router.get("/my-tasks", authenticate, getMyTasksController);
 router.get("/stats", authenticate, getTaskStatsController);
 
 // Create Task
-router.post("/", authenticate, createTaskController);
+router.post(
+  "/", 
+  authenticate, 
+  validate(createTaskSchema), 
+  createTaskController
+);
 
 // Get Tasks by Project
 router.get("/project/:projectId", authenticate, getTasksByProjectController);

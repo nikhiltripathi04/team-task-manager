@@ -1,13 +1,9 @@
 import express from "express";
 import cors from "cors";
-
-import { errorHandler } from "./middleware/error.middleware";
-import { sendResponse } from "./utils/apiResponse";
-import { logger } from "./utils/logger";
-
 import authRoutes from "./modules/auth/auth.routes";
 import projectRoutes from "./modules/project/project.routes";
 import taskRoutes from "./modules/task/task.routes";
+import { globalErrorHandler } from "./middleware/error.middleware";
 
 const app = express();
 
@@ -15,16 +11,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 
 // Health check route
 app.get("/", (req, res) => {
-  logger("Health check route hit");
-  return sendResponse(res, 200, true, "API is running");
+  res.send("Team Task Manager API is running...");
 });
 
-app.use(errorHandler);
+// Global Error Handler (Must be after routes)
+app.use(globalErrorHandler);
 
 export default app;

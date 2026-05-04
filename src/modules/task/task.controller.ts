@@ -1,6 +1,8 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import * as taskService from "./task.service";
+import { asyncHandler } from "../../utils/asyncHandler";
+import { sendResponse } from "../../utils/response";
 
 export const createTaskController = async (req: AuthRequest, res: Response) => {
   try {
@@ -149,29 +151,23 @@ export const getMyTasksController = async (
   }
 };
 
-export const getTaskStatsController = async (
+export const getTaskStatsController = asyncHandler(async (
   req: AuthRequest,
   res: Response
 ) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const stats = await taskService.getTaskStats(req.user.id);
-
-    return res.status(200).json({
-      success: true,
-      message: "Task statistics fetched successfully",
-      data: stats,
-    });
-  } catch (error: any) {
-    return res.status(500).json({
+  if (!req.user) {
+    return res.status(401).json({
       success: false,
-      message: error.message || "Failed to fetch task statistics",
+      message: "Unauthorized",
     });
   }
-};
+
+  const stats = await taskService.getTaskStats(req.user.id);
+
+  return sendResponse(
+    res,
+    200,
+    "Task statistics fetched successfully",
+    stats
+  );
+});
